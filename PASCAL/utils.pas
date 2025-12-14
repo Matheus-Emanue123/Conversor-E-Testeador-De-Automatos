@@ -57,10 +57,20 @@ begin
 end;
 
 function DetectarTipoAutomato(const A: TAutomato): String;
+var
+  Trans: TTransicao;
 begin
-  if ConjuntoContem(A.Alfabeto, '&') then
-    Result := 'AFN-Lambda'
-  else if VerificarNaoDeterminismo(A) then
+  // Verifica se tem transicoes lambda (epsilon)
+  for Trans in A.Transicoes do
+  begin
+    if Trans.Simbolo = '&' then
+    begin
+      Result := 'AFN-Lambda';
+      Exit;
+    end;
+  end;
+  
+  if VerificarNaoDeterminismo(A) then
     Result := 'AFN'
   else
     Result := 'AFD';

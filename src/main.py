@@ -112,11 +112,14 @@ def carregar_automato_menu():
     json_files = sorted(glob.glob("automatos/*.json"))
     if json_files:
         for i, arquivo in enumerate(json_files, 1):
-            print(f"  {i}. {arquivo}")
+            try:
+                automato_temp = Automato.carregar_json(arquivo)
+                tipo = detectar_tipo_automato(automato_temp)
+                print(f"  {i}. {arquivo} ({tipo})")
+            except:
+                print(f"  {i}. {arquivo} (erro ao detectar tipo)")
     else:
         print("  (Nenhum arquivo encontrado em automatos/)")
-    
-    print("\nOu digite o caminho manualmente:")
 
 
 def menu_conversao(automato: Automato, tipo_atual: str):

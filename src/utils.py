@@ -21,9 +21,12 @@ def verificar_nao_determinismo(automato: Automato) -> bool:
 
 
 def detectar_tipo_automato(automato: Automato) -> str:
-    if '&' in automato.alfabeto:
-        return "AFN-Lambda"
-    elif verificar_nao_determinismo(automato):
+    # Verifica se tem transicoes lambda (epsilon)
+    for origem, destino, simbolo in automato.transicoes:
+        if simbolo == '&':
+            return "AFN-Lambda"
+    
+    if verificar_nao_determinismo(automato):
         return "AFN"
     else:
         return "AFD"

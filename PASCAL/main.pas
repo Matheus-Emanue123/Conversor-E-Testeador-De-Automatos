@@ -46,6 +46,9 @@ procedure CarregarAutomato;
 var
   SR: TSearchRec;
   Contador: Integer;
+  AutomatoTemp: TAutomato;
+  TipoTemp: String;
+  CaminhoCompleto: String;
 begin
   WriteLn;
   WriteLn('--- Carregar Automato ---');
@@ -58,7 +61,16 @@ begin
       if (SR.Attr and faDirectory) = 0 then
       begin
         Inc(Contador);
-        WriteLn('  ', Contador, '. ../automatos/', SR.Name);
+        CaminhoCompleto := '../automatos/' + SR.Name;
+        
+        try
+          AutomatoTemp := CarregarAutomatoJSON(CaminhoCompleto);
+          TipoTemp := DetectarTipoAutomato(AutomatoTemp);
+          WriteLn('  ', Contador, '. ../automatos/', SR.Name, ' (', TipoTemp, ')');
+          LiberarAutomato(AutomatoTemp);
+        except
+          WriteLn('  ', Contador, '. ../automatos/', SR.Name, ' (erro)');
+        end;
       end;
     until FindNext(SR) <> 0;
     FindClose(SR);
