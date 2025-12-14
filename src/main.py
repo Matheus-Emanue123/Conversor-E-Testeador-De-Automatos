@@ -103,11 +103,20 @@ def menu_principal():
 
 
 def carregar_automato_menu():
+    import os
+    import glob
+    
     print("\n--- Carregar Autômato ---")
-    print("Exemplos disponíveis:")
-    print("  - automatos/teste.json (AFD)")
-    print("  - automatos/testelambda.json (AFN-Lambda)")
-    print("  - automatos/testeafn.json (AFN)")
+    print("Arquivos JSON disponíveis:")
+    
+    json_files = sorted(glob.glob("automatos/*.json"))
+    if json_files:
+        for i, arquivo in enumerate(json_files, 1):
+            print(f"  {i}. {arquivo}")
+    else:
+        print("  (Nenhum arquivo encontrado em automatos/)")
+    
+    print("\nOu digite o caminho manualmente:")
 
 
 def menu_conversao(automato: Automato, tipo_atual: str):
