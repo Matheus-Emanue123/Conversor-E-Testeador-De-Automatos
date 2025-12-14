@@ -33,9 +33,10 @@ begin
   WriteLn('--- MENU ---');
   WriteLn('1. Carregar automato de arquivo JSON');
   WriteLn('2. Converter automato');
-  WriteLn('3. Testar palavra');
-  WriteLn('4. Salvar automato atual');
-  WriteLn('5. Exibir detalhes do automato');
+  WriteLn('3. Testar palavra (terminal)');
+  WriteLn('4. Testar palavras (arquivo)');
+  WriteLn('5. Salvar automato atual');
+  WriteLn('6. Exibir detalhes do automato');
   WriteLn('0. Sair');
   WriteLn('--------------------------------------------------');
   Write('Escolha uma opcao: ');
@@ -170,6 +171,61 @@ begin
   until False;
 end;
 
+procedure TestarPalavrasArquivo;
+var
+  ArquivoPalavras: TextFile;
+  CaminhoPalavras, PalavraAtual: String;
+  Aceitas, Rejeitadas, Total: Integer;
+  Resultado: Boolean;
+begin
+  WriteLn;
+  Write('Digite o caminho do arquivo de palavras: ');
+  ReadLn(CaminhoPalavras);
+  
+  if not FileExists(CaminhoPalavras) then
+  begin
+    WriteLn('✗ Erro: Arquivo "', CaminhoPalavras, '" nao encontrado!');
+    Exit;
+  end;
+  
+  WriteLn;
+  WriteLn('--- Testando palavras do arquivo: ', CaminhoPalavras, ' ---');
+  WriteLn;
+  
+  Aceitas := 0;
+  Rejeitadas := 0;
+  Total := 0;
+  
+  AssignFile(ArquivoPalavras, CaminhoPalavras);
+  Reset(ArquivoPalavras);
+  
+  try
+    while not Eof(ArquivoPalavras) do
+    begin
+      ReadLn(ArquivoPalavras, PalavraAtual);
+      Inc(Total);
+      
+      Resultado := AceitaPalavra(AutomatoAtual, PalavraAtual);
+      
+      if Resultado then
+      begin
+        WriteLn('✓ ''', PalavraAtual, ''' → ACEITA');
+        Inc(Aceitas);
+      end
+      else
+      begin
+        WriteLn('✗ ''', PalavraAtual, ''' → REJEITADA');
+        Inc(Rejeitadas);
+      end;
+    end;
+    
+    WriteLn;
+    WriteLn('Resumo: ', Aceitas, ' aceitas, ', Rejeitadas, ' rejeitadas (Total: ', Total, ')');
+  finally
+    CloseFile(ArquivoPalavras);
+  end;
+end;
+
 procedure SalvarAutomato;
 begin
   WriteLn;
@@ -216,10 +272,18 @@ begin
         if not AutomatoCarregado then
           WriteLn('✗ Carregue um automato primeiro!')
         else
-          SalvarAutomato;
+          TestarPalavrasArquivo;
       end;
       
       '5':
+      begin
+        if not AutomatoCarregado then
+          WriteLn('✗ Carregue um automato primeiro!')
+        else
+          SalvarAutomato;
+      end;
+      
+      '6':
       begin
         if not AutomatoCarregado then
           WriteLn('✗ Carregue um automato primeiro!')
