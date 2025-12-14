@@ -2,21 +2,23 @@ import json
 from typing import List, Set, Dict, Tuple
 
 class Automato:
+    """Classe base para representar um autômato"""
     
-    def __init__(self, alfabeto: List[str], estados: List[str],
+    def __init__(self, alfabeto: List[str], estados: List[str], 
                  estados_iniciais: List[str], estados_finais: List[str],
                  transicoes: List[List[str]]):
         self.alfabeto = set(alfabeto)
         self.estados = set(estados)
         self.estados_iniciais = set(estados_iniciais)
         self.estados_finais = set(estados_finais)
+        # transicoes: lista de [estado_origem, estado_destino, simbolo]
         self.transicoes = transicoes
         
     @classmethod
     def carregar_json(cls, caminho: str):
-        
+        """Carrega um autômato de um arquivo JSON"""
         with open(caminho, 'r', encoding='utf-8') as f:
-            dados =json.load(f)
+            dados = json.load(f)
         return cls(
             dados['alfabeto'],
             dados['estados'],
@@ -24,21 +26,24 @@ class Automato:
             dados['estados_finais'],
             dados['transicoes']
         )
-     
+    
     def salvar_json(self, caminho: str):
-        
+        """Salva o autômato em um arquivo JSON"""
         dados = {
             'alfabeto': sorted(list(self.alfabeto)),
             'estados': sorted(list(self.estados)),
             'estados_iniciais': sorted(list(self.estados_iniciais)),
             'estados_finais': sorted(list(self.estados_finais)),
-            'transicoes': self.alfabeto
-        }   
-        with open(caminho, 'r', encoding='utf-8') as f:
+            'transicoes': self.transicoes
+        }
+        with open(caminho, 'w', encoding='utf-8') as f:
             json.dump(dados, f, indent=4, ensure_ascii=False)     
         
     def construir_tabela_transicoes(self) -> Dict[Tuple[str, str], Set[str]]:
-        
+        """
+        Constrói um dicionário para acesso rápido às transições
+        Retorna: {(estado_origem, simbolo): {estados_destino}}
+        """
         tabela = {}
         for origem, destino, simbolo in self.transicoes:
             chave = (origem, simbolo)
@@ -48,41 +53,56 @@ class Automato:
         return tabela
     
     def fecho_lambda(self, estados: Set[str], tabela: Dict) -> Set[str]:
-        
-        fecho = set(estados)
-        pilha = list(estados)
+        """
+        Calcula o fecho-lambda (epsilon-closure) de um conjunto de estados
+        Retorna todos os estados alcançáveis por transições lambda (&)
+        """
+        fecho = set(estados)  # Começa com os estados atuais
+        pilha = list(estados)  # Estados a processar
         
         while pilha:
             estado = pilha.pop()
+            # Busca transições lambda deste estado
             if (estado, '&') in tabela:
                 for proximo in tabela[(estado, '&')]:
                     if proximo not in fecho:
                         fecho.add(proximo)
-                        pilha.append(proximo) 
+                        pilha.append(proximo)
+        
         return fecho
     
-    def aceita_palavras(self, palavra: str, eh_afd: bool = False) -> bool:
-        
+    def aceita_palavra(self, palavra: str, eh_afd: bool = False) -> bool:
+        """
+        Verifica se uma palavra é aceita pelo autômato
+        palavra: string a ser testada (use "" para palavra vazia)
+        eh_afd: True se for AFD, False se for AFN/AFN-Lambda
+        """
         tabela = self.construir_tabela_transicoes()
         
+        # Estado inicial (com fecho-lambda se necessário)
         estados_atuais = self.fecho_lambda(self.estados_iniciais, tabela)
         
+        # Processa cada símbolo da palavra
         for simbolo in palavra:
             if simbolo not in self.alfabeto:
-                return False
+                return False  # Símbolo inválido
             
             proximos_estados = set()
             
+            # Para cada estado atual, vê para onde pode ir
             for estado in estados_atuais:
                 if (estado, simbolo) in tabela:
                     proximos_estados.update(tabela[(estado, simbolo)])
-                    
-                    if not proximos_estados:
-                        return False
-                    
-                    estados_atuais = self.fecho_lambda(proximos_estados, tabela)
-                    
-                    return bool(estados_atuais & self.estados_finais)                   
+            
+            # Se não há próximos estados, palavra rejeitada
+            if not proximos_estados:
+                return False
+            
+            # Aplica fecho-lambda nos novos estados
+            estados_atuais = self.fecho_lambda(proximos_estados, tabela)
+        
+        # Aceita se algum estado atual é final
+        return bool(estados_atuais & self.estados_finais)                   
                 
 def afn_para_afd(afn: Automato) -> Automato:
     
